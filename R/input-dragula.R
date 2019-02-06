@@ -72,17 +72,17 @@
 #' 
 dragulaInput <- function(inputId, sourceLabel, targetsLabels, 
                          targetsIds = NULL,
-                         choices = NULL, choiceNames = NULL,
-                         choiceValues = NULL, choiceTargets = NULL, status = "primary",
+                         choices = NULL, choiceNames = NULL, choiceValues = NULL, 
+                         choiceTargets = rep(list(character()), length(targetsIds)), 
+                         status = "primary",
                          replace = FALSE, badge = TRUE, width = NULL, height = "200px") {
   
-  choiceTargets <- restoreInput(inputId, choiceTargets)
-  if (!is.null(choiceTargets)) {
-    choices <- NULL
-    choiceNames <- badgeType(choiceTargets$source, rep('continuous', length(choiceTargets$source)))
-    choiceValues <- choiceTargets$source
-    choiceTargets <- choiceTargets$target
+  restored <- restoreInput(inputId, choiceTargets)
+  
+  if (!isTRUE(all.equal(restored, choiceTargets))) {
+    choiceTargets <- restored$target
   }
+  
   args <- normalizeChoicesArgs(choices, choiceNames, choiceValues, choiceTargets)
 
   if (is.null(targetsIds)) {
@@ -278,7 +278,7 @@ makeDragulaChoices <- function(inputId, args, status = NULL, badge = TRUE) {
 }
 
 
-normalizeChoicesArgs <- function (choices, choiceNames, choiceValues, choiceTargets = rep(list(character()), length(choiceValues))) {
+normalizeChoicesArgs <- function (choices, choiceNames, choiceValues, choiceTargets) {
   if (is.null(choices)) {
     if (is.null(choiceNames) || is.null(choiceValues)) {
       if (!length(choiceNames) && !length(choiceValues)) {

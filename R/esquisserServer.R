@@ -26,7 +26,6 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
   
     output$dragula <- renderUI({
       ns <- session$ns
-      browser()
       var_choices <- setdiff(names(dataChart$data), attr(dataChart$data, "sf_column"))
       dragulaInput(
         inputId = ns("dragvars"),
