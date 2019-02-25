@@ -35,7 +35,7 @@ chartControlsUI <- function(id) {
         style = "max-height: 400px; overflow-y: scroll;", #  padding-left: 10px;
         filterDataUI(id = ns("filter-data"))
       ),
-      style = "default", label = "Data", 
+      style = "default", label = "Data",
       up = TRUE, icon = icon("filter"),
       right = TRUE, inputId = "filterdrop",
       status = "default btn-controls"
