@@ -132,12 +132,12 @@ chartControlsServer <- function(input, output, session, type, data = NULL) {
   
   res_data <- callModule(
     module = filterDataServer, 
-    id = "filter-data", data = data, 
+    id = "filter-data", data = data,
     width = "95%"
   )
 
   outin <- reactiveValues(inputs = NULL, export_ppt = NULL, export_png = NULL)
-  
+
   observeEvent(input$export_ppt, {
     outin$export_ppt <- input$export_ppt
   }, ignoreInit = TRUE)

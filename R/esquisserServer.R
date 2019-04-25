@@ -62,7 +62,7 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
   
   geom_possible <- reactiveValues(x = "auto")
   geom_controls <- reactiveValues(x = "auto")
-  shiny::observeEvent(list(input$dragvars$target, geomSelected$x), {
+  observeEvent(list(input$dragvars$target, geomSelected$x), {
     types <- possible_geom(data = dataChart$data, x = input$dragvars$target$xvar, y = input$dragvars$target$yvar)
     geom_possible$x <- c("auto", types)
     
@@ -76,7 +76,6 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
   })
   
   # Module chart controls : title, xalabs, colors, export...
-  paramsChart <- reactiveValues(inputs = NULL)
   paramsChart <- callModule(
     module = chartControlsServer, 
     id = "controls", 

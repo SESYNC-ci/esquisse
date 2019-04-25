@@ -78,7 +78,7 @@
 #' 
 #' shinyApp(ui, server)
 #' }
-#' 
+#'
 filterDataUI <- function(id) {
   ns <- NS(id)
   uiOutput(ns("filters-mod"))
