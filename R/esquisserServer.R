@@ -24,6 +24,25 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
     dataChart$data <- data$data
     dataChart$name <- data$name
   }, ignoreInit = FALSE)
+  
+  output$dragula <- renderUI({
+    ns <- session$ns
+    var_choices <- setdiff(names(dataChart$data), attr(dataChart$data, "sf_column"))
+    esquisse::dragulaInput(
+      inputId = ns("dragvars"),
+      sourceLabel = "Variables",
+      targetsLabels = c("X", "Y", "Fill", "Color", "Size", "Group", "Facet"),
+      targetsIds = c("xvar", "yvar", "fill", "color", "size", "group", "facet"),
+      choiceValues = var_choices,
+      choiceNames = badgeType(
+        col_name = var_choices,
+        col_type = col_type(dataChart$data[, var_choices])
+      ),
+      badge = FALSE,
+      width = "100%",
+      height = "100%",
+      replace = TRUE)
+  })
 
   dataChart <- callModule(
     module = chooseDataServer, 
@@ -34,28 +53,19 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
     coerceVars = getOption(x = "esquisse.coerceVars", default = FALSE),
     dataModule = dataModule, size = sizeDataModule
   )
+  
   observeEvent(dataChart$data, {
     # special case: geom_sf
     if (inherits(dataChart$data, what = "sf")) {
       geom_possible$x <- c("sf", geom_possible$x)
-    } 
-    var_choices <- setdiff(names(dataChart$data), attr(dataChart$data, "sf_column"))
-    updateDragulaInput(
-      session = session, 
-      inputId = "dragvars", status = NULL,
-      choiceValues = var_choices, 
-      choiceNames = badgeType(
-        col_name = var_choices, 
-        col_type = col_type(dataChart$data[, var_choices])
-      ),
-      badge = FALSE
-    )
-  })
-
+    }
+  }, ignoreInit = FALSE)
+    
   geom_possible <- reactiveValues(x = "auto")
   geom_controls <- reactiveValues(x = "auto")
+  
   shiny::observeEvent(list(input$dragvars$target, input$geom), {
-    geoms <- potential_geoms(
+    geoms <- geoms <- potential_geoms(
       data = dataChart$data,
       mapping = build_aes(
         data = dataChart$data,
@@ -92,7 +102,7 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
   })
 
   # Module chart controls : title, xlabs, colors, export...
-  paramsChart <- reactiveValues(inputs = NULL)
+  # paramsChart <- reactiveValues(inputs = NULL)
   paramsChart <- callModule(
     module = chartControlsServer, 
     id = "controls", 
@@ -124,6 +134,34 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
     })
   )
 
+  # aesthetics from drag-and-drop
+  mapping <- reactiveValues(x = NULL, y = NULL, fill = NULL, color = NULL, size = NULL, group = NULL, facet = NULL)
+  observeEvent(input$dragvars$target$xvar, {
+    mapping$x <- input$dragvars$target$xvar
+  }, ignoreNULL = FALSE)
+  observeEvent(input$dragvars$target$yvar, {
+    mapping$y <- input$dragvars$target$yvar
+  }, ignoreNULL = FALSE)
+  observeEvent(input$dragvars$target$fill, {
+    mapping$fill <- input$dragvars$target$fill
+  }, ignoreNULL = FALSE)
+  observeEvent(input$dragvars$target$color, {
+    mapping$color <- input$dragvars$target$color
+  }, ignoreNULL = FALSE)
+  observeEvent(input$dragvars$target$size, {
+    mapping$size <- input$dragvars$target$size
+  }, ignoreNULL = FALSE)
+  observeEvent(input$dragvars$target$group, {
+    mapping$group <- input$dragvars$target$group
+  }, ignoreNULL = FALSE)
+  observeEvent(input$dragvars$target$facet, {
+    mapping$facet <- input$dragvars$target$facet
+  }, ignoreNULL = FALSE)
+  
+  #plot generated
+  ggplot_r <- reactiveValues(p = NULL)
+  
+  i <- 0
   
   output$plooooooot <- renderPlot({
     req(input$play_plot, cancelOutput = TRUE)
@@ -132,15 +170,20 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
     req(paramsChart$inputs)
     req(input$geom)
     
-    aes_input <- make_aes(input$dragvars$target)
-
-    req(unlist(aes_input) %in% names(dataChart$data))
+    data <- dataChart$data
+    if (!is.null(paramsChart$index) && is.logical(paramsChart$index) & length(paramsChart$index) > 0) {
+      data <- data[paramsChart$index, , drop = FALSE]
+    }
     
-    mapping <- build_aes(
-      data = dataChart$data,
-      .list = aes_input, 
-      geom = input$geom
-    )
+    # aes_input <- make_aes(input$dragvars$target)
+    # 
+    # req(unlist(aes_input) %in% names(dataChart$data))
+    # 
+    # mapping <- build_aes(
+    #   data = dataChart$data,
+    #   .list = aes_input, 
+    #   geom = input$geom
+    # )
     
     geoms <- potential_geoms(
       data = dataChart$data,
@@ -148,7 +191,7 @@ esquisserServer <- function(input, output, session, data = NULL, dataModule = c(
     )
     req(input$geom %in% geoms)
     
-    data <- paramsChart$data
+    # data <- paramsChart$data
     
     scales <- which_pal_scale(
       mapping = mapping,

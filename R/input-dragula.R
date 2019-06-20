@@ -37,7 +37,7 @@
 #' 
 #' @importFrom htmltools validateCssUnit singleton tags
 #' @importFrom jsonlite toJSON
-#' @importFrom shiny fillRow splitLayout
+#' @importFrom shiny fillRow splitLayout restoreInput
 #'
 #' @examples
 #' 
@@ -73,10 +73,19 @@
 dragulaInput <- function(inputId, sourceLabel, targetsLabels, 
                          targetsIds = NULL,
                          choices = NULL, choiceNames = NULL,
-                         choiceValues = NULL, status = "primary", 
+                         choiceValues = NULL, 
+                         choiceTargets = rep(list(character()), length(targetsIds)),
+                         status = "primary", 
                          replace = FALSE, badge = TRUE, width = NULL, height = "200px") {
   
   args <- normalizeChoicesArgs(choices, choiceNames, choiceValues)
+  restored <- restoreInput(inputId, choiceTargets)
+  
+  if (!isTRUE(all.equal(restored, choiceTargets))) {
+    choiceTargets <- restored$target
+  }
+  
+  args <- normalizeChoicesArgs(choices, choiceNames, choiceValues, choiceTargets)
   
   if (is.null(targetsIds)) {
     targetsIds <- gsub(pattern = "[^[:alnum:]]", replacement = "", x = targetsLabels)
